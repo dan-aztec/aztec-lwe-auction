@@ -1,0 +1,3 @@
+[submodule "contracts/lwe-noir"]
+	path = contracts/lwe-noir
+	url = git@github.com:Maddiaa0/lwe-noir.git
