@@ -46,6 +46,7 @@ contract Main {
     }
 
     // fn encrypt_lwe<N, M>(a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32) -> [u32; M] {
+
     // note M = N+1.  Right now amount should be a u8, but we leave as Field
     // so we can use the build in to_le_bit method
     #[aztec(private)]
@@ -54,14 +55,16 @@ contract Main {
         a_samples: [u32; 6], sk: [u32; 6], e: u32, plaintext: u32 
     ) {
         assert(amount < 2**8, "amount must be less than 2**8");
-        let mut encrypted_bid: [u32; 7] = [0; 7];
-
         // we are encrypting the bits individually
-        let bits = amount.to_le_bits(8);
+        let mut encrypted_bid: [Field, 8] = [0; 8];
+
+        // only look at smaller 8 bits of the "amount" bid, and use that as the bid
+        let bits: [u1; 8] = amount.to_le_bits(8);
         for i in 0..8 {
             let bit = bits[i]
-            // should we generate a new e for each bit?
-            let encrypted_bid_bit: [u32; 7] = encrypt_lwe(a_samples, sk, e, bit);
+            // are we supposed to change `a_samples` and/or `e` for each bit?
+            let encrypted_bid_bit: [u32; 7] = encrypt_lwe(a_samples, sk, e, bit as u32);
+            encrypted_bid[i] = bytes32_to_field(encrypted_bid_bit);
         }
         // let encrypted_bid: [u32; 11] = encrypt_lwe(a_samples, sk, e, amount);
         postBid(encrypted_bid);
