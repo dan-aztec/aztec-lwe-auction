@@ -64,7 +64,7 @@ contract Main {
             let bit = bits[i]
             // are we supposed to change `a_samples` and/or `e` for each bit?
             let encrypted_bid_bit: [u32; 7] = encrypt_lwe(a_samples, sk, e, bit as u32);
-            encrypted_bid[i] = bytes32_to_field(encrypted_bid_bit);
+            encrypted_bid[i] = Field.bytes32_to_field(encrypted_bid_bit);
         }
         // let encrypted_bid: [u32; 11] = encrypt_lwe(a_samples, sk, e, amount);
         postBid(encrypted_bid);
