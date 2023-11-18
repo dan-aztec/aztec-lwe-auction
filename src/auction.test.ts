@@ -60,7 +60,7 @@ describe('auction', () => {
     };
 
     it('deploy', async () => {
-        auction = await AuctionContract.deploy(walletA, 1000n, userA).send().deployed();
+        auction = await AuctionContract.deploy(walletA).send().deployed();
         console.log("Deployed auction contract at ", auction.address.toString());
     });
 });
