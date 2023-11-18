@@ -19,13 +19,13 @@ import {
 } from '@aztec/aztec.js';
 
 import { jest } from '@jest/globals';
-import { TokenContract } from './types/Token';
+import { AuctionContract } from './types/Auction';
 
 const { PXE_URL = 'http://localhost:8080', AZTEC_NODE_URL = 'http://localhost:8079' } = process.env;
 
 const TIMEOUT = 60_000;
 
-describe('token', () => {
+describe('auction', () => {
     jest.setTimeout(TIMEOUT);
 
     let aztecNode: AztecNode | undefined;
@@ -35,7 +35,7 @@ describe('token', () => {
     let userA: AztecAddress;
     let userB: AztecAddress;
 
-    let token: TokenContract;
+    let auction: AuctionContract;
 
     beforeAll(async () => {
         pxe = createPXEClient(PXE_URL);
@@ -60,7 +60,7 @@ describe('token', () => {
     };
 
     it('deploy', async () => {
-        token = await TokenContract.deploy(walletA, 1000n, userA).send().deployed();
-        console.log("Deployed token at ", token.address.toString());
+        auction = await AuctionContract.deploy(walletA, 1000n, userA).send().deployed();
+        console.log("Deployed auction contract at ", auction.address.toString());
     });
 });

@@ -1,6 +1,7 @@
 {
   "type": "module",
   "scripts": {
+    "install": "git submodule update && yarn",
     "install:sandbox": "npm install -g @aztec/aztec-sandbox",
     "clean": "rm -rf ./dest ./.tsbuildinfo",
     "start:sandbox": "npx @aztec/aztec-sandbox",
