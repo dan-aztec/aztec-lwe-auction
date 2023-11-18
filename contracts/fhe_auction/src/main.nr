@@ -4,6 +4,7 @@ struct EncryptedBid{
 
 contract Main {
     use dep::std::option::Option;
+    use dep::std::field;
     use dep::aztec::{
         context::{PrivateContext, PublicContext, Context},
         state_vars::{map::Map, public_state::PublicState},
@@ -67,7 +68,12 @@ contract Main {
             let bit: u32 = bits[i] as u32;
             // are we supposed to change `a_samples` and/or `e` for each bit?
             let encrypted_bid_bit: [u32; 7] = encrypt_lwe(a_samples, sk, e, bit);
-            encrypted_bid[i] = Field::bytes32_to_field(encrypted_bid_bit);
+            // they're actually u32 not bytes32, so need to convert to u8
+            // convert to u8 and then can call this method
+            encrypted_bid[i] = field::bytes32_to_field(encrypted_bid_bit);
+            // OR, do the manual exponenation and aggregate into a single field
+            // 8 ** i  * encrypted_bid_bit[i]. . but should be better to convert
+            // the u32 to u8s and use the builtin method
         }
 
     // public function call to write output
