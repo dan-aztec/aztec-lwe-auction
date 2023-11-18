@@ -2,32 +2,35 @@ contract Main {
     use dep::std::option::Option;
     use dep::aztec::{
         context::{PrivateContext, PublicContext, Context},
-        state_vars::{map::Map, public_state::PublicState, set::Set},
+        state_vars::{map::Map, public_state::PublicState},
+        types::type_serialization::{
+                        aztec_address_serialization::{AztecAddressSerializationMethods, AZTEC_ADDRESS_SERIALIZED_LEN},
+            }
     };
     use dep::lwe::{encrypt_lwe, decrypt_lwe};
 
     struct Storage {
-        bid1: Field,
-        bid2: Field,
+        bids: Map<PublicState<AztecAddress, AZTEC_ADDRESS_SERIALIZED_LEN>>,
         outcome: Field,
     }
 
     impl Storage {
         fn init(context: Context) -> pub Self {
             Storage {
-                bid1: PublicState::new(
+                bids: Map::new(
                     context,
                     1,
-                    FieldSerializationMethods,
+                    |context, slot| {
+                        PublicState::new(
+                            context,
+                            slot,
+                            AztecAddressSerializationMethods,
+                        )
+                    },
                 ),
-                bid2: PublicState::new(
-                                    context,
-                                    2,
-                                    FieldSerializationMethods,
-                                ),
                 outcome: PublicState::new(
                                     context,
-                                    3,
+                                    2,
                                     FieldSerializationMethods,
                                 ),
 
@@ -35,8 +38,13 @@ contract Main {
         }
     }
     // fn encrypt_lwe<N, M>(a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32) -> [u32; M] {
-    fn bid1(context: Context, storage: Storage, amount: Field) -> pub () {
-        storage.bid1.set(context, bid1);
+    fn bid(context: Context, storage: Storage, amount: u32, 
+        // fhe encrypt params below, ripped from the lwe signature
+        a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32 
+    ) {
+        let encrypted_bid = encrypt_lwe(a_samples, sk, e, amount);
+        storage.bids.at(AztecAddress::new(context.msg_sender())).write(encrypted_bid);
+
     }
 
 }
