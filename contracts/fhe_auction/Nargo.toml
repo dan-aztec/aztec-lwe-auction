@@ -5,5 +5,5 @@ authors = [""]
 compiler_version = ">=0.18.0"
 
 [dependencies]
-aztec = { git="https://github.com/AztecProtocol/aztec-packages/", tag="aztec-packages-v0.18.2", directory="yarn-project/aztec-nr/aztec" }
+aztec = { git="https://github.com/AztecProtocol/aztec-packages/", tag="aztec-packages-v0.15.0", directory="yarn-project/aztec-nr/aztec" }
 lwe = { path = "../lwe-noir/" }
