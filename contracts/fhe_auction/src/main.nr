@@ -70,6 +70,8 @@ contract Main {
             let encrypted_bid_bit: [u32; 7] = encrypt_lwe(a_samples, sk, e, bit);
             // they're actually u32 not bytes32, so need to convert to u8
             // convert to u8 and then can call this method
+            
+            // TODO: we dont need to store all of this, discard all but 1 
             encrypted_bid[i] = field::bytes32_to_field(encrypted_bid_bit);
             // OR, do the manual exponenation and aggregate into a single field
             // 8 ** i  * encrypted_bid_bit[i]. . but should be better to convert
