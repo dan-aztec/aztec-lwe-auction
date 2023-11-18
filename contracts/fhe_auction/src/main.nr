@@ -37,7 +37,9 @@ contract Main {
             }
         }
     }
+
     // fn encrypt_lwe<N, M>(a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32) -> [u32; M] {
+    #[aztec(private)]
     fn bid(context: Context, storage: Storage, amount: u32, 
         // fhe encrypt params below, ripped from the lwe signature
         a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32 
@@ -45,10 +47,10 @@ contract Main {
         let encrypted_bid = encrypt_lwe(a_samples, sk, e, amount);
         // storage.bids.at(AztecAddress::new(context.msg_sender())).write(encrypted_bid);
         postBid(encrypted_bid);
-
     }
 
-    pub fn postBid(context: PublicContext, storage: Storage, encrypted_bid: u32) {
+    #[aztec(public)]
+    pub fn postBid(encrypted_bid: u32) {
         storage.bids.at(AztecAddress::new(context.msg_sender())).write(encrypted_bid);
     }
 
