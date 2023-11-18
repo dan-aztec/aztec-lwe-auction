@@ -2,7 +2,7 @@ struct EncryptedBid{
 
 }
 
-contract Main {
+contract Auction {
     use dep::std::option::Option;
     use dep::std::field;
     use dep::aztec::{
@@ -92,4 +92,7 @@ contract Main {
         storage.encrypted_bids.at(AztecAddress::new(context.msg_sender())).write(encrypted_bid);
     }
 
+    unconstrained fn compute_note_hash_and_nullifier(contract_address: Field, nonce: Field, storage_slot: Field, serialized_note: [Field; 0]) -> [Field; 4] {
+        [0, 0, 0, 0]
+    }
 }
