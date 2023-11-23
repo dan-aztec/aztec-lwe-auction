@@ -1,66 +1,23 @@
-use dep::aztec::types::type_serialization::TypeSerializationInterface;
+mod encrypted_bid;
 
-global ENCRYPTED_BID_LENGTH = 4;
-struct EncryptedBid{
-    // note for this example the bid is stored as 4 elements, which represents the 4 bytes 
-    bid: [Field; 4]
-}
+// ____ ____ ____ _________ ____ ____ ____ ____ ____ ____ ____ 
+//||F |||h |||e |||       |||A |||u |||c |||t |||i |||o |||n ||
+//||__|||__|||__|||_______|||__|||__|||__|||__|||__|||__|||__||
+//|/__\|/__\|/__\|/_______\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
 
-fn serialize_bid(encrypted_bid: EncryptedBid) -> [Field; ENCRYPTED_BID_LENGTH] {
-    [
-        encrypted_bid.bid[0],
-        encrypted_bid.bid[1],
-        encrypted_bid.bid[2],
-        encrypted_bid.bid[3],
-    ]
-}
-
-fn deseriliaze_bid(serialized_bid: [Field; ENCRYPTED_BID_LENGTH]) -> EncryptedBid {
-    EncryptedBid {
-        bid: [
-            serialized_bid[0],
-            serialized_bid[1],
-            serialized_bid[2],
-            serialized_bid[3],
-        ]
-    }
-}
-
-impl EncryptedBid {
-    pub fn new(bid: [Field; ENCRYPTED_BID_LENGTH]) -> Self {
-        EncryptedBid {
-            bid: bid
-        }
-    }
-
-    pub fn empty() -> Self {
-        EncryptedBid {
-            bid: [0, 0, 0, 0]
-        }
-    }
-
-    pub fn serialize(self: Self) -> [Field; ENCRYPTED_BID_LENGTH] {
-        serialize_bid(self)
-    }
-
-    pub fn deserialize(serialized_bid: [Field; ENCRYPTED_BID_LENGTH]) -> Self {
-        deseriliaze_bid(serialized_bid)
-    }
-}
-
-global EncryptedBidSerializationMethods = TypeSerializationInterface {
-    serialize: serialize_bid,
-    deserialize: deseriliaze_bid,
-};
-
-
-
-
+// FHE Auction
+//
+// This is a demonstration of a fully homomorphic auction contract.
+// Participants encrypt their bid into the fhe scheme
+// 
+// An FHE coprocessor determines the winner of the auction
+// The winner's index is posted to the contract
+// The winner can then privately claim their prize
 contract Auction {
     // Encrypted bid
-    use crate::EncryptedBid;
-    use crate::EncryptedBidSerializationMethods;
-    use crate::ENCRYPTED_BID_LENGTH;
+    use crate::encrypted_bid::EncryptedBid;
+    use crate::encrypted_bid::EncryptedBidSerializationMethods;
+    use crate::encrypted_bid::ENCRYPTED_BID_LENGTH;
     
     // stdlib
     use dep::std::option::Option;
@@ -78,9 +35,14 @@ contract Auction {
     
     // learning with errors encryption
     use dep::lwe::{encrypt_lwe, decrypt_lwe};
-
     use dep::aztec::oracle::debug_log::debug_log_field;
 
+    // Constant determined by fhe scheme over boolean circuits
+    global PLAINTEXT_MODULUS: u64 = 3;
+
+    ///////////////////////////////////////////////////////////////
+    //                  STORAGE DECLARATION                       /
+    ///////////////////////////////////////////////////////////////
     struct Storage {
         // note this is compressing a bunch of bitwise u32s coming from encrypt_lwe() into a single field
         bid_0: PublicState<EncryptedBid, ENCRYPTED_BID_LENGTH>,
@@ -98,64 +60,59 @@ contract Auction {
                 ),
                 bid_1: PublicState::new(
                     context,
-                    5,
+                    1 + ENCRYPTED_BID_LENGTH as Field,
                     EncryptedBidSerializationMethods,
                 ),
                 outcome: PublicState::new(
                     context,
-                    9,
+                    1 + ENCRYPTED_BID_LENGTH as Field * 2,
                     FieldSerializationMethods,
                 ),
             }
         }
     }
 
+    ///////////////////////////////////////////////////////////////
+    //                      PRIVATE METHODS                      //
+    ///////////////////////////////////////////////////////////////
     #[aztec(private)]
     fn constructor() {}
     // fn encrypt_lwe<N, M>(a_samples: [u32; N], sk: [u32; N], e: u32, plaintext: u32) -> [u32; M] {
 
-    // note M = N+1.  Right now amount should be a u8, but we leave as Field
-    // so we can use the build in to_le_bit method
     #[aztec(private)]
     fn bid(
+        // The bid amount; only the least significant bits are used
         amount: Field,
+        // The bidder
         bidder: Field, // hack for demo can be 0 or 1
-        // fhe encrypt params below, ripped from the lwe signature
         a_samples: [u32; 10], sk: [u32; 10], e: u32
     ) {
-        // TODO: shift the amount by the error bits
-
-        // assert(amount < 2**8, "amount must be less than 2**8");
-        // we are encrypting the bits individually
         let mut encrypted_bits: [Field; ENCRYPTED_BID_LENGTH] = [0; ENCRYPTED_BID_LENGTH];
 
         let bits = amount.to_be_bits(ENCRYPTED_BID_LENGTH);
         for i in 0..ENCRYPTED_BID_LENGTH {
-            let mut bit: u32 = bits[i] as u32;
             // Note, in our encryption scheme we do not actually use 0 or 1, we use 1 for falsey and 2 for truthy
-            if bit == 0 {
-                bit = 1;
-            } else {
-                bit = 2;
-            };
-            
-            let message = ((bit as u64 << 32) / 3 as u64) as u32; 
-            // are we supposed to change `a_samples` and/or `e` for each bit?
-            // ans: yes, we loose security if we dont, however this is just a demonstration, samples of a and e can be fetched from the oracle
+            // We also shift the plaintext up to make room for the error
+            let bit: u32 = if bits[i] == 0 { 1 } else { 2 };
+            let message = ((bit as u64 << 32) / PLAINTEXT_MODULUS) as u32; 
+
+            // Encrypt each bit with LWE
             let encryption: [u32; 11] = encrypt_lwe(a_samples, sk, e, message);
             encrypted_bits[i] = encryption[10] as Field;
         }
 
-    // public function call to write output
+        // public function call to write output, TODO: interface wrapper for this
         let _void = context.call_public_function(
             context.this_address(), 
             // compute_selector("postBid([Field; 4],Field)"), 
             1530848631,
             [encrypted_bits[0], encrypted_bits[1], encrypted_bits[2], encrypted_bits[3], bidder]
         );
-        // postBid(encrypted_bid);
     }
 
+    ///////////////////////////////////////////////////////////////
+    //                      PUBLIC METHODS                       //
+    ///////////////////////////////////////////////////////////////
     #[aztec(public)]
     pub internal fn postBid(encrypted_bid: [Field; ENCRYPTED_BID_LENGTH], bidder: Field) {
         let bidder_slot = if bidder == 0 { storage.bid_0 } else { storage.bid_1 };
@@ -164,6 +121,10 @@ contract Auction {
         bidder_slot.write(bid);
     }
 
+
+    ///////////////////////////////////////////////////////////////
+    //                      VIEW METHODS                         //
+    ///////////////////////////////////////////////////////////////
     unconstrained fn readBid0() -> [Field; ENCRYPTED_BID_LENGTH] {
         storage.bid_0.read().serialize()
     }

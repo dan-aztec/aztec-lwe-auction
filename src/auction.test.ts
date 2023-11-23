@@ -1,19 +1,10 @@
 import {
     AztecAddress,
     AztecNode,
-    CompleteAddress,
-    EthAddress,
-    ExtendedNote,
-    Fr,
-    GrumpkinScalar,
-    Note,
     PXE,
-    TxStatus,
     Wallet,
-    computeMessageSecretHash,
     createPXEClient,
     getSandboxAccountsWallets,
-    getUnsafeSchnorrAccount,
     retryUntil,
     waitForSandbox,
 } from '@aztec/aztec.js';
@@ -81,7 +72,7 @@ describe('auction', () => {
         // Use the fhe process to write the client key to the fs
         // The first user will bid with a bid of 1
         {
-            const bid0 = 1;
+            const bid0 = 2;
             const bidder0Number = 0;
             console.log("Sending bid 0");
             auction.methods.bid(bid0, bidder0Number, fixed_a, clientKey, fixed_error).send();
@@ -90,7 +81,7 @@ describe('auction', () => {
 
         // Bid for user 2
         {
-            const bid1 = 2;
+            const bid1 = 1;
             const bidder0Number1 = 1;
             console.log("Sending bid 1");
             await auction.methods.bid(bid1, bidder0Number1, fixed_a, clientKey, fixed_error).send().wait();
