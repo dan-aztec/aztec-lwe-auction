@@ -6,15 +6,11 @@
 
 Aztec is a privacy first fully programmable permission-less execution environment. Each user of Aztec owns their own state; it is encrypted.
 
-Aztec gets it programability by leveraging Zero Knowledge Proofs, this allows users to make claims about encrypted state, however to make claims about other user's encrypted state is another matter. This is where we can leverage Fully Homomorphic Encryption ( FHE ).
+Aztec gets it programmability by leveraging Zero Knowledge Proofs, this allows users to make claims about encrypted state, however to make claims about other user's encrypted state is another matter. This is where we can leverage Fully Homomorphic Encryption ( FHE ).
 
 This repo contains the Aztec Contracts required to create a fully private auction. There is an `auction.test.ts` file that contains the 
 
 This project was created by in the DevConnect co-working space in Istanbul and is not in anyway shape or form ready for production use.
-
-## References 
-
-- The basis 
 
 
 ## Caveats
