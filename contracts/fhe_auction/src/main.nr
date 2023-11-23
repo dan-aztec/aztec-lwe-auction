@@ -104,9 +104,9 @@ contract Auction {
         // public function call to write output, TODO: interface wrapper for this
         let _void = context.call_public_function(
             context.this_address(), 
-            // compute_selector("postBid([Field; 4],Field)"), 
-            1530848631,
-            [encrypted_bits[0], encrypted_bits[1], encrypted_bits[2], encrypted_bits[3], bidder]
+            // compute_selector("postBid([Field; 8],Field)"), 
+            4119065709, 
+            [encrypted_bits[0], encrypted_bits[1], encrypted_bits[2], encrypted_bits[3], encrypted_bits[4], encrypted_bits[5], encrypted_bits[6], encrypted_bits[7], bidder]
         );
     }
 
